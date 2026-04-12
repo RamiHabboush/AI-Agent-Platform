@@ -3,7 +3,7 @@ package com.agentplatform.user;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.agentplatform.agent.Agent;
+import com.agentplatform.domain.Agent;
 
 public class User {
     private String userId;

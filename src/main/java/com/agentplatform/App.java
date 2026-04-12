@@ -1,37 +1,43 @@
 package com.agentplatform;
 
-import com.agentplatform.agent.*;
-import com.agentplatform.llm.*;
-import com.agentplatform.memory.*;
-import com.agentplatform.tools.*;
+import com.agentplatform.application.*;
+import com.agentplatform.domain.Agent;
+import com.agentplatform.infrastructure.queue.TaskQueue;
+import com.agentplatform.infrastructure.tools.ToolRegistry;
+import com.agentplatform.infrastructure.tools.WebSearchTool;
+import com.agentplatform.infrastructure.llm.*;
+import com.agentplatform.infrastructure.persistence.InMemoryAgentStateRepository;
+import com.agentplatform.domain.memory.ShortTermMemory;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class App {
 
     public static void main(String[] args) {
 
-        // LLM
-        LLMClient llm = new SimpleLLMClient();
+        TaskQueue queue = new TaskQueue();
 
-        // Reasoner
-        Reasoner reasoner = new Reasoner(llm);
+        ToolRegistry toolRegistry = new ToolRegistry();
 
-        // Memory
-        Memory memory = new ShortTermMemory();
+        LLMClient llm = new OpenAILLMClient();
 
-        // Tools
-        ToolRegistry registry = new ToolRegistry();
-        registry.registerTool(new WebSearchTool());
-        registry.registerTool(new FileTool());
+        toolRegistry.register(new WebSearchTool());
+        
+        AgentStateRepository stateRepository = new InMemoryAgentStateRepository();
 
-        // Agent
-        Agent agent = new Agent(
-                "ResearchAgent",
-                "Find top AI startups in Europe and summarize them", memory
-        );
+        AgentService agentService = new AgentService(llm, toolRegistry, stateRepository);
+        
+        Map<String, Agent> agentStore = new HashMap<>();
 
-        // Loop
-        AgentLoop loop = new AgentLoop(reasoner, memory, registry);
+        Agent agent = new Agent("agent1", "Find latest AI news", new ShortTermMemory());
+        agentStore.put(agent.getName(), agent);
 
-        loop.run(agent);
+        // start worker
+        AgentWorker worker = new AgentWorker(queue, agentService, agentStore, stateRepository);
+        new Thread(worker).start();
+
+        // submit first task
+        queue.submit(new AgentTask(agent.getName(), 1));
     }
 }

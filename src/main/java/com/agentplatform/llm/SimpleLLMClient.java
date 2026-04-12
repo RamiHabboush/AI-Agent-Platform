@@ -1,5 +1,7 @@
 package com.agentplatform.llm;
 
+import com.agentplatform.infrastructure.llm.*;
+
 public class SimpleLLMClient implements LLMClient {
 
     @Override

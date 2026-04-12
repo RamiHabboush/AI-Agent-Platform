@@ -3,8 +3,8 @@ package com.agentplatform.user;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.agentplatform.agent.Agent;
-import com.agentplatform.agent.AgentManager;
+import com.agentplatform.domain.*;
+import com.agentplatform.application.AgentManager;
 
 public class UserManager {
 
